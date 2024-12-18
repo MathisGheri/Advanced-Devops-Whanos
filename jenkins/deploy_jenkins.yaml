@@ -1,0 +1,86 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: jenkins-home
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: jenkins-dind
+  labels:
+    app: jenkins
+spec:
+  serviceAccountName: jenkins-deployer
+  securityContext:
+    fsGroup: 2375 
+  containers:
+  - name: jenkins
+    image: jenkins-custom:latest
+    imagePullPolicy: IfNotPresent
+    env:
+    - name: JENKINS_OPTS
+      value: "--prefix=/jenkins"
+    ports:
+    - containerPort: 8080
+    volumeMounts:
+    - name: docker-socket
+      mountPath: /var/run
+    - name: jenkins-home
+      mountPath: /var/jenkins_home
+
+  - name: dind
+    image: docker:dind
+    securityContext:
+      privileged: true
+    args: 
+      - "--host=unix:///var/run/docker.sock"
+      - "--insecure-registry=potatgangcorp.fr:5000"
+    volumeMounts:
+    - name: docker-socket
+      mountPath: /var/run
+
+  volumes:
+  - name: docker-socket
+    emptyDir: {}
+  - name: jenkins-home
+    persistentVolumeClaim:
+      claimName: jenkins-home
+
+---
+# Service Jenkins
+kind: Service
+apiVersion: v1
+metadata:
+  name: jenkins-service
+spec:
+  selector:
+    app: jenkins
+  ports:
+  - port: 8080
+    targetPort: 8080
+
+---
+# Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: example-ingress
+spec:
+  rules:
+  - http:
+      paths:
+      - pathType: Prefix
+        path: /jenkins
+        backend:
+          service:
+            name: jenkins-service
+            port:
+              number: 8080

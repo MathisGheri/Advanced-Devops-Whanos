@@ -1,0 +1,8 @@
+# ansible main playbook file
+---
+- hosts: local
+  gather_facts: true
+  roles:
+    - docker
+    - kubectl
+    - kind

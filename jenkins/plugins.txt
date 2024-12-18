@@ -1,0 +1,12 @@
+configuration-as-code:latest
+kubernetes:latest
+workflow-aggregator:latest
+git:latest
+blueocean:latest
+cloudbees-folder:latest
+credentials:latest
+github:latest
+job-dsl:latest
+structs:latest
+role-strategy:latest
+ws-cleanup:latest

@@ -1,0 +1,12 @@
+- name: Check if kind is already installed
+  command: which kind
+  register: kind_installed
+  failed_when: false
+  changed_when: false
+
+- name: Download kind binary if not installed
+  get_url:
+    url: "https://github.com/kubernetes-sigs/kind/releases/download/v0.20.0/kind-linux-amd64"
+    dest: "/usr/local/bin/kind"
+    mode: '0755'
+  when: kind_installed.rc != 0

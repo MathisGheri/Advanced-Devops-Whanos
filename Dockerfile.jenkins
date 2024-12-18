@@ -1,0 +1,31 @@
+FROM jenkins/jenkins:lts
+
+USER root
+
+RUN groupadd -g 2375 docker && usermod -aG docker jenkins
+
+RUN apt-get update && apt-get install -y nano && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y docker.io curl && rm -rf /var/lib/apt/lists/*
+
+RUN curl -L "https://github.com/mikefarah/yq/releases/download/v4.34.1/yq_linux_amd64" -o /usr/local/bin/yq && \
+    chmod +x /usr/local/bin/yq
+
+RUN curl -LO "https://dl.k8s.io/release/v1.27.0/bin/linux/amd64/kubectl" && \
+    chmod +x kubectl && mv kubectl /usr/local/bin/kubectl
+
+COPY jenkins/plugins.txt /usr/share/jenkins/ref/plugins.txt
+RUN jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt
+
+RUN mkdir -p /usr/share/jenkins/ref/casc_configs
+COPY jenkins/jenkins.yaml /usr/share/jenkins/ref/casc_configs/jenkins.yaml
+
+COPY jenkins/whanos_deploy.sh /usr/share/jenkins/ref/whanos_deploy.sh
+RUN chmod +x /usr/share/jenkins/ref/whanos_deploy.sh
+
+COPY jenkins/jobs /usr/share/jenkins/ref/jobs
+COPY images /usr/share/jenkins/ref/images
+
+ENV CASC_JENKINS_CONFIG=/usr/share/jenkins/ref/casc_configs/jenkins.yaml
+
+USER jenkins

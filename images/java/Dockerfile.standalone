@@ -1,0 +1,15 @@
+FROM maven:3.9.4-eclipse-temurin-21
+
+SHELL ["/bin/bash", "-c"]
+WORKDIR /app
+
+COPY ./app/pom.xml ./app/
+RUN mvn -f ./app/pom.xml dependency:resolve
+
+COPY ./app ./app
+
+RUN mvn -f ./app/pom.xml package
+
+RUN find ./app -not -path "./app/target/*" -not -name "target" -not -name "app" -delete
+
+CMD ["java", "-jar", "./app/target/app.jar"]

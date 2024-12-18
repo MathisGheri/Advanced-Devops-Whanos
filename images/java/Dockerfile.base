@@ -1,0 +1,15 @@
+FROM maven:3.9.4-eclipse-temurin-21
+
+SHELL ["/bin/bash", "-c"]
+
+ONBUILD COPY . /app
+
+WORKDIR /app
+
+ONBUILD RUN mvn dependency:resolve -f app/pom.xml
+
+ONBUILD RUN mvn package -f app/pom.xml
+
+ONBUILD RUN app/target/app.jar .
+
+ONBUILD RUN rm -rf app/

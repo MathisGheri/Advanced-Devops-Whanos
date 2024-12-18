@@ -1,0 +1,23 @@
+# main yaml file for docker role
+- name: Update apt cache
+  become: true
+  apt:
+    update_cache: yes
+
+- name: Get the latest stable kubectl version
+  become: false
+  shell: "curl -Ls https://dl.k8s.io/release/stable.txt"
+  register: kubectl_stable_version
+
+- name: Download kubectl binary
+  become: true
+  get_url:
+    url: "https://dl.k8s.io/release/{{ kubectl_stable_version.stdout }}/bin/linux/amd64/kubectl"
+    dest: /usr/local/bin/kubectl
+    mode: 0755
+
+- name: Ensure kubectl is installed
+  become: true
+  command: kubectl version --client
+  register: kubectl_version
+  ignore_errors: yes
